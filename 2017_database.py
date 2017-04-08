@@ -1,4 +1,3 @@
-
 #------------------------------------------------------------------------------
 #	 2017_Database
 #  
@@ -38,6 +37,29 @@ def createTable(table_name):
 	return 0
 
 #------------------------------------------------------------------------------
+#	 Row Add
+#  
+#  Description: Adds a row to the table from user input 
+#
+#  Inputs: N/A
+#------------------------------------------------------------------------------
+
+def rowAdd(table_name):
+	print('Enter description')
+	description = input()
+	print('Enter date of purchase, or press enter for today\'s date')
+	date = input()
+	print('Enter cost')
+	cost = input()
+	print('Enter receipt index')
+	receipt=input()
+
+	c.execute("INSERT OR IGNORE INTO {tn} ({rec}, {date}, {des}, {cost}) VALUES (receipt, date, description, cost)".\
+        format(tn=table_name, rec='Receipt', date='Date', des='Description', cost='Cost'))
+
+	return 0
+
+#------------------------------------------------------------------------------
 #	 Main
 #  
 #  Description: Runs the database program which asks for input 
@@ -51,7 +73,10 @@ sqlite_file = 'finances_db.sqlite'    # name of the sqlite database file
 conn = sqlite3.connect(sqlite_file)
 c = conn.cursor()
 
-createTable("Finances 2017")
+table_name = "Finances 2017"
+
+createTable(table_name)
+rowAdd(table_name)
 
 # Committing changes and closing the connection to the database file
 conn.commit()
