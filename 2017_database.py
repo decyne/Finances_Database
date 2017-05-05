@@ -22,18 +22,21 @@ import os.path
 def createTable(table_name):
 
 	#Create table if it does not already exist
-	if not os.path.isfile("/home/declan/Online_Repository/Finances_Database/finances_db.sqlite"):
+	try:
 		c.execute('CREATE TABLE {tn} ({nf} {ft})'\
-		        .format(tn=table_name, nf='Receipt', ft='INTEGER'))
+  	      .format(tn=table_name, nf='Receipt', ft='INTEGER'))
 
 		c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
-		        .format(tn=table_name, cn='Date', ct='TEXT'))
+    	    .format(tn=table_name, cn='Date', ct='TEXT'))
 
 		c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
-		        .format(tn=table_name, cn='Description', ct='TEXT'))
+   	     .format(tn=table_name, cn='Description', ct='TEXT'))
 
 		c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
-		        .format(tn=table_name, cn='Cost', ct='REAL'))
+    	    .format(tn=table_name, cn='Cost', ct='REAL'))
+	except:
+		print("Table already exists")
+
 	return 0
 
 #------------------------------------------------------------------------------
@@ -45,17 +48,22 @@ def createTable(table_name):
 #------------------------------------------------------------------------------
 
 def rowAdd(table_name):
-	print('Enter description')
+	'''print('Enter description')
 	description = input()
 	print('Enter date of purchase, or press enter for today\'s date')
 	date = input()
 	print('Enter cost')
 	cost = input()
 	print('Enter receipt index')
-	receipt=input()
+	receipt=input()'''
 
-	c.execute("INSERT OR IGNORE INTO {tn} ({rec}, {date}, {des}, {cost}) VALUES (receipt, date, description, cost)".\
-        format(tn=table_name, rec='Receipt', date='Date', des='Description', cost='Cost'))
+	description="hello"
+	date="27-01"
+	cost=12
+	receipt=1
+
+  # SHould sanitise table name
+	c.execute("INSERT INTO " + table_name + " VALUES (?,?,?,?)", (receipt,date,description,cost))
 
 	return 0
 
@@ -73,7 +81,7 @@ sqlite_file = 'finances_db.sqlite'    # name of the sqlite database file
 conn = sqlite3.connect(sqlite_file)
 c = conn.cursor()
 
-table_name = "Finances 2017"
+table_name = "Finances_2017"
 
 createTable(table_name)
 rowAdd(table_name)
