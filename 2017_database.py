@@ -47,31 +47,6 @@ def createTable(table_name):
 	return 0
 
 #------------------------------------------------------------------------------
-#	 Row Add
-#  
-#  Description: Adds a row to the table from user input 
-#
-#  Inputs: N/A
-#------------------------------------------------------------------------------
-
-def rowAdd(table_name):
-	print('Enter description')
-	description = input()
-	print('Enter date of purchase, or press enter for today\'s date')
-	date = input()
-	print('Enter cost')
-	cost = input()
-	print('Enter receipt index')
-	receipt = input()
-	print('Enter Category')
-	category = input()
-
-  # Should sanitise table name
-	c.execute("INSERT INTO " + table_name + " VALUES (?,?,?,?,?)", (receipt,date,description,cost,category))
-
-	return 0
-
-#------------------------------------------------------------------------------
 #	 Import from CSV
 #  
 #  Description: Takes a csv file and adds it to the database 
@@ -80,7 +55,40 @@ def rowAdd(table_name):
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-#	 Return Total
+#	 Row Add
+#  
+#  Description: Adds a row to the table from user input 
+#
+#  Inputs: N/A
+#------------------------------------------------------------------------------
+
+def rowAdd(table_name,date,description,cost,category):
+
+	# Get largest index and increment to create unique index
+	c.execute('SELECT MAX(receipt) FROM ' + table_name)
+	id = c.fetchone()[0] + 1
+		
+  # Should sanitise table name
+	c.execute("INSERT INTO " + table_name + " VALUES (?,?,?,?,?)", (id,date,description,cost,category))
+
+	return 0
+
+#------------------------------------------------------------------------------
+#	 Row Remove
+#  
+#  Description: Removes a row from the table based on id 
+#
+#  Inputs: N/A
+#------------------------------------------------------------------------------
+
+def rowRemove(table_name,id):
+	id = str(id)
+	c.execute('DELETE FROM ' + table_name + ' WHERE Receipt=?', (id))
+
+	return 0
+
+#------------------------------------------------------------------------------
+#	 Get Cost
 #  
 #  Description: Returns the sum of the cost column for a specified inputs 
 #
@@ -88,31 +96,13 @@ def rowAdd(table_name):
 #          Type
 #------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
-#	 User Return Prompt
-#  
-#  Description: Asks the user for a range and returns the total cost of all items in that range 
-#
-#  Inputs: N/A 
-#------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
-#	 User Text Interface
-#  
-#  Description: Provides a user interface for the user 
-#
-#  Inputs: N/A 
-#------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
-#	 Get User Selection
-#  
-#  Description: Gets a range of values to select from the table using user input 
-#
-#  Inputs: N/A 
-#------------------------------------------------------------------------------
-
-#def getTableRange():
+def getCost(table,date_min,date_max,category):
+	total = 0
+	table = getSubTable(table,date_min,date_max,category)
+	for row in table:
+		total = total + row[3]
+	
+	return total 
 
 #------------------------------------------------------------------------------
 #	 Get Sub-Table
@@ -149,16 +139,7 @@ def printSubTable(sub_table):
 #------------------------------------------------------------------------------
 
 def printTable(table_name):
-	printSubTable(getSubTable(table_name,MIN_DATE,MAX_DATE,"P"))
-
-
-#------------------------------------------------------------------------------
-#	 Print User Selection
-#  
-#  Description: Prints the whole table 
-#
-#  Inputs: N/A 
-#------------------------------------------------------------------------------
+	printSubTable(getSubTable(table_name,MIN_DATE,MAX_DATE,"U"))
 
 #------------------------------------------------------------------------------
 #	 Main
@@ -177,7 +158,9 @@ c = conn.cursor()
 table_name = "Finances_2017"
 
 createTable(table_name)
-#rowAdd(table_name)
+#print(getCost(table_name,MIN_DATE,MAX_DATE,"U"))
+#rowAdd(table_name,"2017-08-02","second",88,"U")
+rowRemove(table_name,8)
 printTable(table_name)
 
 # Committing changes and closing the connection to the database file
