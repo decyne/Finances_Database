@@ -10,6 +10,7 @@
 
 import sqlite3
 import os.path
+import csv
 from prettytable import PrettyTable
 
 MIN_DATE = '1753-1-1'
@@ -49,10 +50,19 @@ def createTable(table_name):
 #------------------------------------------------------------------------------
 #	 Import from CSV
 #  
-#  Description: Takes a csv file and adds it to the database 
+#  Description: Takes a csv file of the same format date,description,cost,category 
+#								and adds it to the database 
 #
 #  Inputs: N/A
 #------------------------------------------------------------------------------
+
+def importFromCSV(table_name,csv_name):
+	with open(csv_name,'r') as csv_file:
+		csv_reader = csv.reader(csv_file)
+		for row in csv_reader:
+			rowAdd(table_name,row[0],row[1],row[2],row[3])
+	
+	return 0
 
 #------------------------------------------------------------------------------
 #	 Row Add
@@ -63,7 +73,6 @@ def createTable(table_name):
 #------------------------------------------------------------------------------
 
 def rowAdd(table_name,date,description,cost,category):
-
 	# Get largest index and increment to create unique index
 	c.execute('SELECT MAX(receipt) FROM ' + table_name)
 	id = c.fetchone()[0] + 1
@@ -113,7 +122,11 @@ def getCost(table,date_min,date_max,category):
 #------------------------------------------------------------------------------
 
 def getSubTable(table,date_min,date_max,category):
-	c.execute('SELECT * FROM ' + table + ' WHERE category=? AND date BETWEEN ? AND ?', (category,date_min,date_max))
+	if(category == "*"):
+		c.execute('SELECT * FROM ' + table + ' WHERE date BETWEEN ? AND ?', (date_min,date_max))
+	else:
+		c.execute('SELECT * FROM ' + table + ' WHERE category=? AND date BETWEEN ? AND ?', (category,date_min,date_max))
+	
 	return c.fetchall()
 
 #------------------------------------------------------------------------------
@@ -139,7 +152,7 @@ def printSubTable(sub_table):
 #------------------------------------------------------------------------------
 
 def printTable(table_name):
-	printSubTable(getSubTable(table_name,MIN_DATE,MAX_DATE,"U"))
+	printSubTable(getSubTable(table_name,MIN_DATE,MAX_DATE,"*"))
 
 #------------------------------------------------------------------------------
 #	 Main
@@ -160,7 +173,8 @@ table_name = "Finances_2017"
 createTable(table_name)
 #print(getCost(table_name,MIN_DATE,MAX_DATE,"U"))
 #rowAdd(table_name,"2017-08-02","second",88,"U")
-rowRemove(table_name,8)
+#print(getSubTable(table_name,MIN_DATE,MAX_DATE,"*"))
+importFromCSV(table_name,"example.csv")
 printTable(table_name)
 
 # Committing changes and closing the connection to the database file
