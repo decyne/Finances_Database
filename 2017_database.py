@@ -13,170 +13,124 @@ import os.path
 import csv
 from prettytable import PrettyTable
 
-MIN_DATE = '1753-1-1'
-MAX_DATE = '9999-12-31'
+class FinanceDatabase:
 
-#------------------------------------------------------------------------------
-#	 Create Table
-#  
-#  Description: Creates a table with receipt index, date, description and 
-#               purchase cost
-#
-#  Inputs: Table name
-#------------------------------------------------------------------------------
-def createTable(table_name):
+	MIN_DATE = '1753-1-1'
+	MAX_DATE = '9999-12-31'
 
-	#Create table if it does not already exist
-	try:
-		c.execute('CREATE TABLE {tn} ({nf} {ft})'\
-  	      .format(tn=table_name, nf='Receipt', ft='INTEGER'))
-
-		c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
-    	    .format(tn=table_name, cn='Date', ct='date'))
-
-		c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
-   	     .format(tn=table_name, cn='Description', ct='TEXT'))
-
-		c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
-    	    .format(tn=table_name, cn='Cost', ct='REAL'))
-
-		c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
-    	    .format(tn=table_name, cn='Category', ct='TEXT'))
-	except:
-		print("Table already exists")
-
-	return 0
-
-#------------------------------------------------------------------------------
-#	 Import from CSV
-#  
-#  Description: Takes a csv file of the same format date,description,cost,category 
-#								and adds it to the database 
-#
-#  Inputs: N/A
-#------------------------------------------------------------------------------
-
-def importFromCSV(table_name,csv_name):
-	with open(csv_name,'r') as csv_file:
-		csv_reader = csv.reader(csv_file)
-		for row in csv_reader:
-			rowAdd(table_name,row[0],row[1],row[2],row[3])
-	
-	return 0
-
-#------------------------------------------------------------------------------
-#	 Row Add
-#  
-#  Description: Adds a row to the table from user input 
-#
-#  Inputs: N/A
-#------------------------------------------------------------------------------
-
-def rowAdd(table_name,date,description,cost,category):
-	# Get largest index and increment to create unique index
-	c.execute('SELECT MAX(receipt) FROM ' + table_name)
-	id = c.fetchone()[0] + 1
+	# Creates a table with receipt index, date, description and purchase cost
+	def __init__(self,table_name):
 		
-  # Should sanitise table name
-	c.execute("INSERT INTO " + table_name + " VALUES (?,?,?,?,?)", (id,date,description,cost,category))
+		#Probs should sanatise this. Won't make a difference in my current implementation but...
+		self.table_name = table_name
+		sqlite_file = self.table_name + '.sqlite'
 
-	return 0
+		self.conn = 0
+		self.c = 0
 
-#------------------------------------------------------------------------------
-#	 Row Remove
-#  
-#  Description: Removes a row from the table based on id 
-#
-#  Inputs: N/A
-#------------------------------------------------------------------------------
+		self.conn = sqlite3.connect(self.sqlite_file)
+		self.c =  self.conn.cursor()
 
-def rowRemove(table_name,id):
-	id = str(id)
-	c.execute('DELETE FROM ' + table_name + ' WHERE Receipt=?', (id))
+		#Create table if it does not already exist
+		try:
+			c.execute('CREATE TABLE {tn} ({nf} {ft})'\
+  		      .format(tn=self.table_name, nf='Receipt', ft='INTEGER'))
 
-	return 0
+			c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
+    		    .format(tn=self.table_name, cn='Date', ct='date'))
 
-#------------------------------------------------------------------------------
-#	 Get Cost
-#  
-#  Description: Returns the sum of the cost column for a specified inputs 
-#
-#  Inputs: Date range
-#          Type
-#------------------------------------------------------------------------------
+			c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
+   		     .format(tn=self.table_name, cn='Description', ct='TEXT'))
 
-def getCost(table,date_min,date_max,category):
-	total = 0
-	table = getSubTable(table,date_min,date_max,category)
-	for row in table:
-		total = total + row[3]
+			c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
+    		    .format(tn=self.table_name, cn='Cost', ct='REAL'))
+
+			c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
+    		    .format(tn=self.table_name, cn='Category', ct='TEXT'))
+		except:
+			print("Table already exists")
+		
+		self.conn.commit()
+		self.conn.close()	
+
+	# Connects to database
+	def connect():
+		self.conn = sqlite3.connect(self.sqlite_file)
+		self.c =  self.conn.cursor()
+
+	# Disconnects from database
+	def disconnect():
+		self.conn.commit()
+		self.conn.close()	
+
+	# Takes a csv file of the same format date,description,cost,category 
+	# and adds it to the database 
+	def importFromCSV(csv_name):
+		connect()
+		with open(csv_name,'r') as csv_file:
+			csv_reader = csv.reader(csv_file)
+			for row in csv_reader:
+				rowAdd(row[0],row[1],row[2],row[3])
+
+		disconnect()	
+		return 0
+
+	# Adds a row to the table from user input 
+	def rowAdd(date,description,cost,category):
+		connect()
+		# Get largest index and increment to create unique index
+		c.execute('SELECT MAX(receipt) FROM ' + self.table_name)
+		id = c.fetchone()[0] + 1
+		
+		c.execute("INSERT INTO " + self.table_name + " VALUES (?,?,?,?,?)", (id,date,description,cost,category))
+
+		disconnect()
+		return 0
+
+	# Removes a row from the table based on id 
+	def rowRemove(id):
+		connect()
+		id = str(id)
+		c.execute('DELETE FROM ' + self.table_name + ' WHERE Receipt=?', (id))
+
+		disconnect()
+		return 0
+
+	# Returns the sum of the cost column for a specified inputs 
+	def getCost(date_min,date_max,category):
+		total = 0
+		table = getSubTable(date_min,date_max,category)
+		for row in table:
+			total = total + row[3]
 	
-	return total 
+		return total 
 
-#------------------------------------------------------------------------------
-#	 Get Sub-Table
-#  
-#  Description: Extracts part of the table depending on user input 
-#
-#  Inputs: N/A 
-#------------------------------------------------------------------------------
+	# Extracts part of the table depending on user input 
+	def getSubTable(date_min,date_max,category):
+		connect()
+		if(category == "*"):
+			c.execute('SELECT * FROM ' + self.table_name + ' WHERE date BETWEEN ? AND ?', (date_min,date_max))
+		else:
+			c.execute('SELECT * FROM ' + self.table_name + ' WHERE category=? AND date BETWEEN ? AND ?', (category,date_min,date_max))
+		
+		disconnect()
+		return c.fetchall()
 
-def getSubTable(table,date_min,date_max,category):
-	if(category == "*"):
-		c.execute('SELECT * FROM ' + table + ' WHERE date BETWEEN ? AND ?', (date_min,date_max))
-	else:
-		c.execute('SELECT * FROM ' + table + ' WHERE category=? AND date BETWEEN ? AND ?', (category,date_min,date_max))
-	
-	return c.fetchall()
+	# Prints part of the table 
+	def printSubTable(sub_table):
+		t = PrettyTable(['Reciept #','Date','Description','Cost($)','Category'])
+		for row in sub_table:
+			t.add_row(row)
+		print(t)
 
-#------------------------------------------------------------------------------
-#	 Print Sub-Table
-#  
-#  Description: Prints part of the table 
-#
-#  Inputs: N/A 
-#------------------------------------------------------------------------------
+	# Prints the whole table 
+	def printTable():
+		printSubTable(getSubTable(self.table_name,MIN_DATE,MAX_DATE,"*"))
 
-def printSubTable(sub_table):
-	t = PrettyTable(['Reciept #','Date','Description','Cost($)','Category'])
-	for row in sub_table:
-		t.add_row(row)
-	print(t)
 
-#------------------------------------------------------------------------------
-#	 Print Table
-#  
-#  Description: Prints the whole table 
-#
-#  Inputs: N/A 
-#------------------------------------------------------------------------------
+db = FinanceDatabase("databasename")
+#print(getCost(self.table_name,MIN_DATE,MAX_DATE,"U"))
+#rowAdd(self.table_name,"2017-08-02","second",88,"U")
+#print(getSubTable(self.table_name,MIN_DATE,MAX_DATE,"*"))
+#importFromCSV(self.table_name,"example.csv")
 
-def printTable(table_name):
-	printSubTable(getSubTable(table_name,MIN_DATE,MAX_DATE,"*"))
-
-#------------------------------------------------------------------------------
-#	 Main
-#  
-#  Description: Runs the database program which asks for input 
-#               
-#  Inputs: N/A
-#------------------------------------------------------------------------------
-
-sqlite_file = 'finances_db.sqlite'    # name of the sqlite database file
-
-# Connecting to the database file
-conn = sqlite3.connect(sqlite_file)
-c = conn.cursor()
-
-table_name = "Finances_2017"
-
-createTable(table_name)
-#print(getCost(table_name,MIN_DATE,MAX_DATE,"U"))
-#rowAdd(table_name,"2017-08-02","second",88,"U")
-#print(getSubTable(table_name,MIN_DATE,MAX_DATE,"*"))
-importFromCSV(table_name,"example.csv")
-printTable(table_name)
-
-# Committing changes and closing the connection to the database file
-conn.commit()
-conn.close()
