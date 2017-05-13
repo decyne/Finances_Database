@@ -2,6 +2,8 @@ import pickle
 
 class SavedDictionary:
 
+
+	# If the dictionary exists read in the file, otherwise create it
 	def __init__(self,name):
 		
 		self.name = name
@@ -14,19 +16,18 @@ class SavedDictionary:
 		with open(self.name,'wb') as fp:
 			pickle.dump(self.dict,fp)
 
+	# Add an entry and save the dictionary
 	def addEntry(self,entry,key):
 		self.dict[key] = entry
 		with open(self.name,'wb') as fp:
 			pickle.dump(self.dict,fp)
 
-	def removeEntry(self,icon):
+	# Remove the file and save the dictionary
+	def removeEntry(self,key):
 		del self.dict[key]
 		with open(self.name,'wb') as fp:
 			pickle.dump(self.dict,fp)
 
-	def getCategories(self):
+	# Retrieve the dictionary in list format
+	def getDict(self):
 		return self.dict.items()
-
-d = SavedDictionary('test')
-print(d.getCategories())
-
