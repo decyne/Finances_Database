@@ -55,7 +55,7 @@ def rowAdd(table_name):
 	receipt=input()
 
 	c.execute("INSERT OR IGNORE INTO {tn} ({rec}, {date}, {des}, {cost}) VALUES (receipt, date, description, cost)".\
-        format(tn=table_name, rec='Receipt', date='Date', des='Description', cost='Cost'))
+            format(tn=table_name, rec='Receipt', date='Date', des='Description', cost='Cost'))
 
 	return 0
 
