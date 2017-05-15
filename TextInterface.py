@@ -25,7 +25,7 @@ def categoryOpt():
 def budgetOpt():
 	user_input = input("1) Add Budget Category \n\
 2) Remove Budget Category \n\
-3) List BudgetCategories \n\
+3) List Budget Categories \n\
 \n\
 0) Back")
 
