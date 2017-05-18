@@ -31,3 +31,7 @@ class SavedDictionary:
 	# Retrieve the dictionary in list format
 	def getDict(self):
 		return self.dict.items()
+
+	# Retrieve the dictionary in list format
+	def getEntry(self,key):
+		return self.dict[key]

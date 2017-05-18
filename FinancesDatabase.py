@@ -23,7 +23,7 @@ class FinanceDatabase:
 		
 		#Probs should sanatise this. Won't make a difference in my current implementation but...
 		self.table_name = table_name
-		sqlite_file = self.table_name + '.sqlite'
+		self.sqlite_file = self.table_name + '.sqlite'
 
 		self.conn = 0
 		self.c = 0
@@ -33,33 +33,34 @@ class FinanceDatabase:
 
 		#Create table if it does not already exist
 		try:
-			c.execute('CREATE TABLE {tn} ({nf} {ft})'\
+			self.c.execute('CREATE TABLE {tn} ({nf} {ft})'\
   		      .format(tn=self.table_name, nf='Receipt', ft='INTEGER'))
 
-			c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
+			self.c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
     		    .format(tn=self.table_name, cn='Date', ct='date'))
 
-			c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
+			self.c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
    		     .format(tn=self.table_name, cn='Description', ct='TEXT'))
 
-			c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
+			self.c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
     		    .format(tn=self.table_name, cn='Cost', ct='REAL'))
 
-			c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
-    		    .format(tn=self.table_name, cn='Category', ct='TEXT'))
-		except:
+			self.c.execute("ALTER TABLE {tn} ADD COLUMN '{cn}' {ct}"\
+  		    .format(tn=self.table_name, cn='Category', ct='TEXT'))
+	# Should probably add a specific except	
+		except sqlite3.OperationalError:
 			print("Table already exists")
 		
 		self.conn.commit()
 		self.conn.close()	
 
 	# Connects to database
-	def connect():
+	def connect(self):
 		self.conn = sqlite3.connect(self.sqlite_file)
 		self.c =  self.conn.cursor()
 
 	# Disconnects from database
-	def disconnect():
+	def disconnect(self):
 		self.conn.commit()
 		self.conn.close()	
 
@@ -97,40 +98,23 @@ class FinanceDatabase:
 		return 0
 
 	# Returns the sum of the cost column for a specified inputs 
-	def getCost(date_min,date_max,category):
+	def getCost(self,date_min,date_max,category):
 		total = 0
-		table = getSubTable(date_min,date_max,category)
+		table = self.getSubTable(date_min,date_max,category)
 		for row in table:
 			total = total + row[3]
 	
 		return total 
 
 	# Extracts part of the table depending on user input 
-	def getSubTable(date_min,date_max,category):
-		connect()
+	def getSubTable(self,date_min,date_max,category):
+		self.connect()
 		if(category == "*"):
-			c.execute('SELECT * FROM ' + self.table_name + ' WHERE date BETWEEN ? AND ?', (date_min,date_max))
+			self.c.execute('SELECT * FROM ' + self.table_name + ' WHERE date BETWEEN ? AND ?', (date_min,date_max))
 		else:
-			c.execute('SELECT * FROM ' + self.table_name + ' WHERE category=? AND date BETWEEN ? AND ?', (category,date_min,date_max))
+			self.c.execute('SELECT * FROM ' + self.table_name + ' WHERE category=? AND date BETWEEN ? AND ?', (category,date_min,date_max))
+	
+		sub_table = self.c.fetchall()
+		self.disconnect()
 		
-		disconnect()
-		return c.fetchall()
-
-	# Prints part of the table 
-	def printSubTable(sub_table):
-		t = PrettyTable(['Reciept #','Date','Description','Cost($)','Category'])
-		for row in sub_table:
-			t.add_row(row)
-		print(t)
-
-	# Prints the whole table 
-	def printTable():
-		printSubTable(getSubTable(self.table_name,MIN_DATE,MAX_DATE,"*"))
-
-
-db = FinanceDatabase("databasename")
-#print(getCost(self.table_name,MIN_DATE,MAX_DATE,"U"))
-#rowAdd(self.table_name,"2017-08-02","second",88,"U")
-#print(getSubTable(self.table_name,MIN_DATE,MAX_DATE,"*"))
-#importFromCSV(self.table_name,"example.csv")
-
+		return sub_table
