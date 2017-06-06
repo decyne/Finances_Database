@@ -77,24 +77,27 @@ class FinanceDatabase:
 		return 0
 
 	# Adds a row to the table from user input 
-	def rowAdd(date,description,cost,category):
-		connect()
+	def rowAdd(self,date,description,cost,category):
+		self.connect()
 		# Get largest index and increment to create unique index
-		c.execute('SELECT MAX(receipt) FROM ' + self.table_name)
-		id = c.fetchone()[0] + 1
+		try:
+			self.c.execute('SELECT MAX(receipt) FROM ' + self.table_name)
+			id = self.c.fetchone()[0] + 1
+		except TypeError:
+			id = 0
 		
-		c.execute("INSERT INTO " + self.table_name + " VALUES (?,?,?,?,?)", (id,date,description,cost,category))
+		self.c.execute("INSERT INTO " + self.table_name + " VALUES (?,?,?,?,?)", (id,date,description,cost,category))
 
-		disconnect()
+		self.disconnect()
 		return 0
 
 	# Removes a row from the table based on id 
-	def rowRemove(id):
-		connect()
+	def rowRemove(self,id):
+		self.connect()
 		id = str(id)
-		c.execute('DELETE FROM ' + self.table_name + ' WHERE Receipt=?', (id))
+		self.c.execute('DELETE FROM ' + self.table_name + ' WHERE Receipt=?', (id))
 
-		disconnect()
+		self.disconnect()
 		return 0
 
 	# Returns the sum of the cost column for a specified inputs 

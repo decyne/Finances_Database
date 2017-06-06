@@ -34,12 +34,20 @@ def budgetOpt():
 0) Back")
 
 	if(user_input == "1"):
-		# Need to check if option exists in category
-		key = input("Enter budget category name ")
+		# Prompt until valid category is entered
+		while 1:
+			keylist = input("Enter list of category keys one after the other with no spaces ")
+			try:
+				for key in keylist:
+					categories.getEntry(key)
+				break
+			except:
+				print("Category key must exists in category list")
+			
 		name = str(input("Enter budget limit "))
-		budget.addEntry(name,key)
+		budget.addEntry(name,keylist)
 	elif(user_input == "2"):
-		key = input("Enter name of category to remove")
+		key = input("Enter category key string to remove")
 		budget.removeEntry(key)
 	elif(user_input == "3"):
 		printSubTable(budget.getDict(),['Name','Budget'])
@@ -82,11 +90,39 @@ def getUserDateRange():
          
     return (start_date,end_date)   
 
+def addEntry():
+
+	# Prompt until a valid date is entered
+	while 1:
+		date = input("Enter date of purchase")
+		try:
+			convertToDate(date)
+			break
+		except:
+			print("Incorrect date format, should be YYYY-MM-DD")
+	description = input("Enter short description of purchase")
+	cost = input("Enter cost of purchase")
+	# Prompt until valid category is entered
+	while 1:
+		category = input("Enter category of purchase (Key form)")
+		try:
+			categories.getEntry(category)
+			break		
+		except:
+			print("Category must exists in category list")
+			
+	expenses.rowAdd(date,description,cost,category)
+
+
+def removeEntry():
+
+	index = input("Enter reciept index of entry")
+	expenses.rowRemove(index)
+
 # Gets the amount spent vs amount budgeted for each budgeted category
 def getBudgetSummary(start_date,end_date):
 
 	# Very inneficient looping but screw it, should only be ~10 values max anyway	
-	# Form a list of expanded names from the compacted keys in the budget listing
 	names = []
 	for keys,cost in budget.getDict():
 		expanded_keys = list(keys)
@@ -104,8 +140,8 @@ def getBudgetSummary(start_date,end_date):
 		expanded_keys = list(keys)
 		cost = 0
 	# Adds together the cost for each key listed for each budget item	
-	for individual_key in expanded_keys:
-		cost = cost + expenses.getCost(start_date,end_date,individual_key)
+		for individual_key in expanded_keys:
+			cost = cost + expenses.getCost(start_date,end_date,individual_key)
 		cost_list.append(cost)
 	
 	budgeted = []
@@ -118,8 +154,8 @@ def getBudgetSummary(start_date,end_date):
 
 # Prints the list of items bought, income earnt and how much of each budget category is spent for the input time period
 def showSummary(start_date,end_date):
-	printSubTable(expenses.getSubTable(start_date,end_date,"*"),['Index','Date','Description','Key'])
-	printSubTable(income.getSubTable(start_date,end_date,"*"),['Index','Date','Description','Key'])
+	printSubTable(expenses.getSubTable(start_date,end_date,"*"),['Index','Date','Description','Cost','Key'])
+	printSubTable(income.getSubTable(start_date,end_date,"*"),['Index','Date','Description','Cost','Key'])
 	printSubTable(getBudgetSummary(start_date,end_date),['Categories','Expenditure','Budgeted'])
 
 # Converts a string to a date object. Throws an error if the string is not in the valid format
@@ -136,6 +172,14 @@ def printSubTable(sub_table,list_of_headers):
 		t.add_row(row)
 	print(t)
 
+def printExpenses():
+	print("Expenses")
+	printSubTable(expenses.getSubTable(FIRST_DATE,LAST_DATE,"*"),['Index','Date','Description','Cost','Key'])
+
+def printIncome():
+	print("Income")
+	printSubTable(income.getSubTable(FIRST_DATE,LAST_DATE,"*"),['Index','Date','Description','Cost','Key'])
+
 #------------------------------------------------------------------------------
 # Object Setup
 #------------------------------------------------------------------------------
@@ -144,6 +188,11 @@ categories = SavedDictionary("Categories")
 budget = SavedDictionary("Budget")
 expenses = FinanceDatabase("Expenses")
 income = FinanceDatabase("Income") 
+
+global FIRST_DATE
+global LAST_DATE
+FIRST_DATE = convertToDate("1990-01-01")
+LAST_DATE = convertToDate("3000-12-31")
 
 #------------------------------------------------------------------------------
 # Main
@@ -157,21 +206,24 @@ while 1:
 4) Category Options \n\
 5) Budget Options \n\
 6) Import CSV \n\
+7) Print Expenses and Income \n\
 \n\
 0) Exit")
 
 	if(user_input == "1"):
-		print("Add entry")
+		addEntry()
 	elif(user_input == "2"):
 		summary()
 	elif(user_input == "3"):
-		print("Remove Entry")
+		removeEntry()
 	elif(user_input == "4"):
 		categoryOpt()
 	elif(user_input == "5"):
 		budgetOpt()
 	elif(user_input == "6"):
 		print("import CSV")
+	elif(user_input == "7"):
+		printExpenses()
+		printIncome()
 	elif(user_input == "0"):
 		exit()
-
