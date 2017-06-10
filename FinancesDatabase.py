@@ -66,14 +66,12 @@ class FinanceDatabase:
 
 	# Takes a csv file of the same format date,description,cost,category 
 	# and adds it to the database 
-	def importFromCSV(csv_name):
-		connect()
+	def importFromCSV(self,csv_name):
 		with open(csv_name,'r') as csv_file:
 			csv_reader = csv.reader(csv_file)
 			for row in csv_reader:
-				rowAdd(row[0],row[1],row[2],row[3])
+				self.rowAdd(row[0],row[1],row[2],row[3])
 
-		disconnect()	
 		return 0
 
 	# Adds a row to the table from user input 

@@ -4,6 +4,23 @@ from SavedDictionary import SavedDictionary
 from FinancesDatabase import FinanceDatabase
 from prettytable import PrettyTable
 import datetime
+from calendar import monthrange
+
+def importFromCSV():
+	user_input = input("\
+1) Import Expenses \n\
+2) Import Income \n\
+\n\
+0) Exit ")
+
+	csv_name = input("Enter name of csv file")
+
+	if (user_input == "1"):	
+		expenses.importFromCSV(csv_name)
+	elif (user_input == "2"):
+		income.importFromCSV(csv_name)
+	
+	return 0
 
 def categoryOpt():
 	user_input = input("\
@@ -63,12 +80,31 @@ def summary():
 5) Custom Summary\n\
 \n\
 0) Back")
-
+# TODO still need to do week, month year and verify if day works
 	if(user_input == "1"):
-		print("Daily Summary")
+		day = input("Enter day")
+		day = convertToDate(day)
+		showSummary(day,day)
+	elif(user_input == "2"):
+		day = input ("Enter day during week")
+		day = convertToDate(day)
+	elif(user_input == "3"):
+		year = input("Enter year")
+		month = input("Enter month number")
+		last_day = monthrange(int(year),int(month))[1]
+		start_date = concatonateDate(1,month,year)
+		end_date = concatonateDate(last_day,month,year)
+		showSummary(start_date,end_date)
+		print(str(start_date) + ", " + end_date)
 	elif(user_input == "5"):
 		(start_date,end_date) = getUserDateRange()
 		showSummary(start_date,end_date)
+
+# Enter day,month and year and 
+def concatonateDate(day,month,year):
+	date = '-'.join([str(year),str(month),str(day)])
+	convertToDate(date)
+	return date
 
 # Prompts the user for a date range
 def getUserDateRange():
@@ -221,7 +257,7 @@ while 1:
 	elif(user_input == "5"):
 		budgetOpt()
 	elif(user_input == "6"):
-		print("import CSV")
+		importFromCSV()
 	elif(user_input == "7"):
 		printExpenses()
 		printIncome()
