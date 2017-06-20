@@ -119,7 +119,7 @@ def getUserDateRange():
             print("Incorrect date format, should be YYYY-MM-DD")
             continue
 
-        if(not end_date > start_date):
+        if(not end_date >= start_date):
             print("End date should be after start date")
             continue
         break
@@ -197,7 +197,7 @@ def showSummary(start_date,end_date):
 # Converts a string to a date object. Throws an error if the string is not in the valid format
 def convertToDate(date_text):
     try:
-        return datetime.datetime.strptime(date_text, '%Y-%m-%d')
+        return datetime.datetime.strptime(date_text, '%Y-%m-%d').date()
     except ValueError:
         raise ValueError("Incorrect date format, should be YYYY-MM-DD")
 

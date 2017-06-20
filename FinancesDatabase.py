@@ -11,6 +11,7 @@
 import sqlite3
 import os.path
 import csv
+import datetime
 from prettytable import PrettyTable
 
 class FinanceDatabase:
@@ -110,12 +111,14 @@ class FinanceDatabase:
 	# Extracts part of the table depending on user input 
 	def getSubTable(self,date_min,date_max,category):
 		self.connect()
+		date_max = date_max + datetime.timedelta(days=1)
 		if(category == "*"):
-			self.c.execute('SELECT * FROM ' + self.table_name + ' WHERE date BETWEEN ? AND ?', (date_min,date_max))
+			self.c.execute("SELECT * FROM " + self.table_name + " WHERE date >= ? AND date < ?", (date_min,date_max))
 		else:
-			self.c.execute('SELECT * FROM ' + self.table_name + ' WHERE category=? AND date BETWEEN ? AND ?', (category,date_min,date_max))
+			self.c.execute('SELECT * FROM ' + self.table_name + ' WHERE category=? AND date >= ? AND date < ?', (category,date_min,date_max))
 	
 		sub_table = self.c.fetchall()
+		
 		self.disconnect()
 		
 		return sub_table
